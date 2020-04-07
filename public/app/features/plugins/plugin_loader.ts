@@ -81,12 +81,16 @@ const exposeToPlugin = (modules: Module[]) => {
   script.textContent = JSON.stringify({
     imports: Object.fromEntries(modules.map(([key]) => [key, `./${key}/fake-filename-from-importmap.js`])),
   });
-  document.currentScript.after(script);
+  // Tests don't support `document.currentScript`
+  document.body.append(script);
 
   // Wait for import map
   SystemJS.prepareImport().then(() => {
     // `resolve` is needed because module keys must be URLs
-    modules.forEach(([key, value]) => SystemJS.set(SystemJS.resolve(key), value));
+    modules.forEach(([key, value]) => {
+      console.log(value);
+      SystemJS.set(SystemJS.resolve(key), value);
+    });
   });
 };
 
@@ -180,9 +184,19 @@ exposeToPlugin([
   ...flotDeps.map(flotDep => [flotDep, { fakeDep: 1 }] as Module),
 ]);
 
+// For tests
+export function resolvePluginModulePath(path: string): string {
+  const defaultExtension = path.endsWith('.js') ? '' : '.js';
+  const baseURL = path.startsWith('/') ? '' : '/public/';
+
+  return `${baseURL}${path}${defaultExtension}`;
+}
+
 const cacheBuster = Date.now();
 
 export async function importPluginModule(path: string): Promise<any> {
+  path = resolvePluginModulePath(path);
+
   const builtIn = builtInPlugins[path];
   if (builtIn) {
     // for handling dynamic imports
@@ -193,10 +207,7 @@ export async function importPluginModule(path: string): Promise<any> {
     }
   }
 
-  const defaultExtension = path.endsWith('.js') ? '' : '.js';
-  const baseURL = path.startsWith('/') ? '' : '/public/';
-
-  return SystemJS.import(`${baseURL}${path}${defaultExtension}?_cache=${cacheBuster}`);
+  return SystemJS.import(`${path}?_cache=${cacheBuster}`);
 }
 
 export function importDataSourcePlugin(meta: DataSourcePluginMeta): Promise<GenericDataSourcePlugin> {
