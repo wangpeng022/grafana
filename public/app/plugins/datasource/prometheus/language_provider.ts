@@ -11,11 +11,14 @@ import PromqlSyntax, { FUNCTIONS, RATE_RANGES } from './promql';
 import { PrometheusDatasource } from './datasource';
 import { PromQuery, PromMetricsMetadata } from './types';
 
+// @ts-ignore
+import StreamJSONResponse, { StreamJSONResponseWorker } from './workers/StreamJSONResponse.worker';
+
 const DEFAULT_KEYS = ['job', 'instance'];
 const EMPTY_SELECTOR = '{}';
 const HISTORY_ITEM_COUNT = 5;
 const HISTORY_COUNT_CUTOFF = 1000 * 60 * 60 * 24; // 24h
-export const DEFAULT_LOOKUP_METRICS_THRESHOLD = 10000; // number of metrics defining an installation that's too big
+export const DEFAULT_LOOKUP_METRICS_THRESHOLD = 100000; // number of metrics defining an installation that's too big
 
 const wrapLabel = (label: string): CompletionItem => ({ label });
 
@@ -58,6 +61,7 @@ export default class PromQlLanguageProvider extends LanguageProvider {
   timeRange?: { start: number; end: number };
   metrics?: string[];
   metricsMetadata?: PromMetricsMetadata;
+  metricsWithMetadata: CompletionItem[];
   startTask: Promise<any>;
   datasource: PrometheusDatasource;
   lookupMetricsThreshold: number;
@@ -111,11 +115,53 @@ export default class PromQlLanguageProvider extends LanguageProvider {
     return defaultValue;
   };
 
+  requestViaWorker(url: string, hasObjectResponse?: false): Promise<string[]>;
+  requestViaWorker(url: string, hasObjectResponse?: true): Promise<PromMetricsMetadata>;
+  requestViaWorker(url: string, hasObjectResponse?: boolean): Promise<string[] | PromMetricsMetadata>;
+  requestViaWorker(url: string, hasObjectResponse = false): Promise<string[] | PromMetricsMetadata> {
+    return new Promise(resolve => {
+      let nodes: string[] | PromMetricsMetadata = hasObjectResponse ? {} : [];
+      const streamWorker = new StreamJSONResponse() as StreamJSONResponseWorker;
+
+      streamWorker.onmessage = e => {
+        if (e.data === 'DONE') {
+          streamWorker.terminate();
+          resolve(nodes);
+        }
+
+        if (Array.isArray(nodes)) {
+          nodes = nodes.concat(e.data);
+        } else {
+          Object.assign(nodes, e.data);
+        }
+      };
+
+      streamWorker.onerror = error => {
+        console.error(error);
+        resolve(nodes);
+      };
+
+      streamWorker.postMessage({
+        chunkSize: Math.floor(this.lookupMetricsThreshold / 20),
+        limit: this.lookupMetricsThreshold,
+        url,
+      });
+    });
+  }
+
   start = async (): Promise<any[]> => {
-    this.metrics = await this.request('/api/v1/label/__name__/values', []);
+    const [metrics, metricsMetadata] = await Promise.all([
+      this.requestViaWorker('http://localhost:9099/api/v1/label/__name__/values'),
+      this.requestViaWorker('http://localhost:9099/api/v1/metadata', true),
+    ]);
+
+    this.metrics = metrics;
+    this.metricsMetadata = metricsMetadata;
+    this.metricsWithMetadata = this.metrics.map(m => addMetricsMetadata(m, this.metricsMetadata));
+
     this.lookupsDisabled = this.metrics.length > this.lookupMetricsThreshold;
-    this.metricsMetadata = await this.request('/api/v1/metadata', {});
     this.processHistogramMetrics(this.metrics);
+
     return [];
   };
 
@@ -211,7 +257,7 @@ export default class PromQlLanguageProvider extends LanguageProvider {
   };
 
   getTermCompletionItems = (): TypeaheadOutput => {
-    const { metrics, metricsMetadata } = this;
+    const { metrics } = this;
     const suggestions = [];
 
     suggestions.push({
@@ -223,7 +269,7 @@ export default class PromQlLanguageProvider extends LanguageProvider {
     if (metrics && metrics.length) {
       suggestions.push({
         label: 'Metrics',
-        items: metrics.map(m => addMetricsMetadata(m, metricsMetadata)),
+        items: this.metricsWithMetadata,
       });
     }
 
