@@ -3,7 +3,7 @@ import { Select, AsyncSelect, MultiSelect, AsyncMultiSelect } from './Select';
 import { withCenteredStory, withHorizontallyCenteredStory } from '../../utils/storybook/withCenteredStory';
 import { SelectableValue } from '@grafana/data';
 import { getAvailableIcons, IconName } from '../../types';
-import { select, boolean } from '@storybook/addon-knobs';
+import { select, boolean, number } from '@storybook/addon-knobs';
 import { Icon } from '../Icon/Icon';
 import { Button } from '../Button';
 import { ButtonSelect } from './ButtonSelect';
@@ -24,6 +24,8 @@ export default {
   },
 };
 
+const BEHAVIOUR_GROUP = 'Behaviour props';
+
 const loadAsyncOptions = () => {
   return new Promise<Array<SelectableValue<string>>>(resolve => {
     setTimeout(() => {
@@ -33,7 +35,6 @@ const loadAsyncOptions = () => {
 };
 
 const getKnobs = () => {
-  const BEHAVIOUR_GROUP = 'Behaviour props';
   const disabled = boolean('Disabled', false, BEHAVIOUR_GROUP);
   const invalid = boolean('Invalid', false, BEHAVIOUR_GROUP);
   const loading = boolean('Loading', false, BEHAVIOUR_GROUP);
@@ -61,6 +62,18 @@ const getKnobs = () => {
     invalid,
     loading,
     prefixEl,
+  };
+};
+
+const getMultiSelectKnobs = () => {
+  const isClearable = boolean('Clearable', false, BEHAVIOUR_GROUP);
+  const closeMenuOnSelect = boolean('Close on Select', false, BEHAVIOUR_GROUP);
+  const maxVisibleValues = number('Max. visible values', 5, undefined, BEHAVIOUR_GROUP);
+
+  return {
+    isClearable,
+    closeMenuOnSelect,
+    maxVisibleValues,
   };
 };
 
@@ -179,6 +192,7 @@ export const multiSelect = () => {
         }}
         size="md"
         {...getDynamicProps()}
+        {...getMultiSelectKnobs()}
       />
     </>
   );
