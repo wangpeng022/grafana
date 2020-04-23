@@ -54,7 +54,7 @@ const UserListAdminPageUnConnected: React.FC<Props> = props => {
                 prefix={<Icon name="search" />}
               />
               <LinkButton href="admin/users/create" variant="primary">
-                New user
+                新增用户
               </LinkButton>
             </HorizontalGroup>
           </div>
@@ -64,9 +64,9 @@ const UserListAdminPageUnConnected: React.FC<Props> = props => {
               <thead>
                 <tr>
                   <th></th>
-                  <th>Login</th>
-                  <th>Email</th>
-                  <th>Name</th>
+                  <th>用户名</th>
+                  <th>邮箱</th>
+                  <th>姓名</th>
                   <th>
                     Seen&nbsp;
                     <Tooltip placement="top" content="Time since user was seen using Grafana">

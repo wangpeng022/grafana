@@ -119,7 +119,7 @@ func (hs *HTTPServer) setIndexViewData(c *models.ReqContext) (*dtos.IndexViewDat
 		children = append(children, &dtos.NavLink{Text: "Import", SubTitle: "Import dashboard from file or Grafana.com", Id: "import", Icon: "import", Url: setting.AppSubUrl + "/dashboard/import"})
 
 		data.NavTree = append(data.NavTree, &dtos.NavLink{
-			Text:       "Create",
+			Text:       "创建",
 			Id:         "create",
 			Icon:       "plus",
 			Url:        setting.AppSubUrl + "/dashboard/new",
@@ -129,15 +129,15 @@ func (hs *HTTPServer) setIndexViewData(c *models.ReqContext) (*dtos.IndexViewDat
 	}
 
 	dashboardChildNavs := []*dtos.NavLink{
-		{Text: "Home", Id: "home", Url: setting.AppSubUrl + "/", Icon: "home-alt", HideFromTabs: true},
+		{Text: "主页", Id: "home", Url: setting.AppSubUrl + "/", Icon: "home-alt", HideFromTabs: true},
 		{Text: "Divider", Divider: true, Id: "divider", HideFromTabs: true},
 		{Text: "Manage", Id: "manage-dashboards", Url: setting.AppSubUrl + "/dashboards", Icon: "sitemap"},
-		{Text: "Playlists", Id: "playlists", Url: setting.AppSubUrl + "/playlists", Icon: "presentation-play"},
+		{Text: "播放清单", Id: "playlists", Url: setting.AppSubUrl + "/playlists", Icon: "presentation-play"},
 		{Text: "Snapshots", Id: "snapshots", Url: setting.AppSubUrl + "/dashboard/snapshots", Icon: "camera"},
 	}
 
 	data.NavTree = append(data.NavTree, &dtos.NavLink{
-		Text:       "Dashboards",
+		Text:       "仪表板",
 		Id:         "dashboards",
 		SubTitle:   "Manage dashboards & folders",
 		Icon:       "apps",
@@ -172,8 +172,8 @@ func (hs *HTTPServer) setIndexViewData(c *models.ReqContext) (*dtos.IndexViewDat
 			HideFromMenu: true,
 			SortWeight:   dtos.WeightProfile,
 			Children: []*dtos.NavLink{
-				{Text: "Preferences", Id: "profile-settings", Url: setting.AppSubUrl + "/profile", Icon: "sliders-v-alt"},
-				{Text: "Change Password", Id: "change-password", Url: setting.AppSubUrl + "/profile/password", Icon: "lock", HideFromMenu: true},
+				{Text: "首选项", Id: "profile-settings", Url: setting.AppSubUrl + "/profile", Icon: "sliders-v-alt"},
+				{Text: "更改密码", Id: "change-password", Url: setting.AppSubUrl + "/profile/password", Icon: "lock", HideFromMenu: true},
 			},
 		}
 
@@ -336,10 +336,10 @@ func (hs *HTTPServer) setIndexViewData(c *models.ReqContext) (*dtos.IndexViewDat
 
 	if c.IsGrafanaAdmin {
 		adminNavLinks := []*dtos.NavLink{
-			{Text: "Users", Id: "global-users", Url: setting.AppSubUrl + "/admin/users", Icon: "user"},
+			{Text: "用户", Id: "global-users", Url: setting.AppSubUrl + "/admin/users", Icon: "user"},
 			{Text: "Orgs", Id: "global-orgs", Url: setting.AppSubUrl + "/admin/orgs", Icon: "building"},
-			{Text: "Settings", Id: "server-settings", Url: setting.AppSubUrl + "/admin/settings", Icon: "sliders-v-alt"},
-			{Text: "Stats", Id: "server-stats", Url: setting.AppSubUrl + "/admin/stats", Icon: "graph-bar"},
+			{Text: "设置", Id: "server-settings", Url: setting.AppSubUrl + "/admin/settings", Icon: "sliders-v-alt"},
+			{Text: "状态", Id: "server-stats", Url: setting.AppSubUrl + "/admin/stats", Icon: "graph-bar"},
 		}
 
 		if setting.LDAPEnabled {
@@ -361,7 +361,7 @@ func (hs *HTTPServer) setIndexViewData(c *models.ReqContext) (*dtos.IndexViewDat
 	}
 
 	data.NavTree = append(data.NavTree, &dtos.NavLink{
-		Text:         "Help",
+		Text:         "帮助",
 		SubTitle:     fmt.Sprintf(`%s v%s (%s)`, setting.ApplicationName, setting.BuildVersion, setting.BuildCommit),
 		Id:           "help",
 		Url:          "#",
